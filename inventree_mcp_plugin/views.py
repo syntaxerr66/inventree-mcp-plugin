@@ -1,14 +1,15 @@
 """Authenticated MCP Streamable HTTP endpoint for InvenTree.
 
-Wraps django-mcp-server's view with DRF TokenAuthentication + SessionAuthentication.
+MCPServerStreamableHttpView inherits from DRF's APIView, so InvenTree's
+default DRF permission/auth classes apply. We override them to use InvenTree's
+own token auth and only require IsAuthenticated (no model permissions needed).
 """
 
 import logging
 
-from django.http import JsonResponse
-from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from mcp_server.views import MCPServerStreamableHttpView
+from rest_framework.permissions import IsAuthenticated
 
 from .context import set_current_user
 from .mcp_server import mcp
@@ -19,47 +20,46 @@ from . import tools  # noqa: F401
 logger = logging.getLogger("inventree_mcp_plugin")
 
 
-@method_decorator(csrf_exempt, name="dispatch")
 class MCPView(MCPServerStreamableHttpView):
-    """MCP endpoint with DRF authentication."""
+    """MCP endpoint using InvenTree's auth and relaxed permissions."""
 
     mcp_server = mcp
 
-    def dispatch(self, request, *args, **kwargs):
+    # Use InvenTree's token auth + session auth (no DjangoModelPermissions)
+    authentication_classes = []  # Populated in setup to avoid import-time issues
+    permission_classes = [IsAuthenticated]
+
+    @classmethod
+    def as_view(cls, **initkwargs):
+        # Lazily set authentication classes from InvenTree's own auth
         from rest_framework.authentication import (
+            BasicAuthentication,
             SessionAuthentication,
-            TokenAuthentication,
         )
-        from rest_framework.exceptions import AuthenticationFailed
-        from rest_framework.request import Request as DRFRequest
 
-        # Wrap in DRF request for authentication
-        drf_request = DRFRequest(request)
-        authenticated = False
+        try:
+            from users.authentication import ApiTokenAuthentication
 
-        for auth_cls in [TokenAuthentication, SessionAuthentication]:
-            try:
-                result = auth_cls().authenticate(drf_request)
-                if result is not None:
-                    user, _ = result
-                    request.user = user
-                    set_current_user(user)
-                    authenticated = True
-                    break
-            except AuthenticationFailed:
-                continue
+            cls.authentication_classes = [
+                ApiTokenAuthentication,
+                SessionAuthentication,
+                BasicAuthentication,
+            ]
+        except ImportError:
+            cls.authentication_classes = [
+                SessionAuthentication,
+                BasicAuthentication,
+            ]
 
-        if not authenticated and not getattr(request.user, "is_authenticated", False):
-            return JsonResponse(
-                {
-                    "jsonrpc": "2.0",
-                    "error": {
-                        "code": -32000,
-                        "message": "Authentication required. Use Token or Session auth.",
-                    },
-                    "id": None,
-                },
-                status=401,
-            )
+        view = super().as_view(**initkwargs)
+        view.csrf_exempt = True
+        return csrf_exempt(view)
+
+    def dispatch(self, request, *args, **kwargs):
+        # Store user in thread-local for tool functions that need it
+        if hasattr(request, "user") and getattr(
+            request.user, "is_authenticated", False
+        ):
+            set_current_user(request.user)
 
         return super().dispatch(request, *args, **kwargs)

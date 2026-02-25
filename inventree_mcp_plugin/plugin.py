@@ -29,9 +29,10 @@ class InvenTreeMCPPlugin(UrlsMixin, SettingsMixin, InvenTreePlugin):
 
     def setup_urls(self):
         from django.urls import re_path
+        from django.views.decorators.csrf import csrf_exempt
 
         from .views import MCPView
 
         return [
-            re_path(r"^mcp/?$", MCPView.as_view(), name="mcp"),
+            re_path(r"^mcp/?$", csrf_exempt(MCPView.as_view()), name="mcp"),
         ]
