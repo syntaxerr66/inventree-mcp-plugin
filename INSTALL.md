@@ -5,6 +5,7 @@ This guide covers installing the InvenTree MCP plugin across all supported deplo
 ## Table of Contents
 
 - [Prerequisites](#prerequisites)
+- [Quick Install (LXC / Bare-Metal)](#quick-install-lxc--bare-metal)
 - [Installation by Deployment Type](#installation-by-deployment-type)
   - [Proxmox LXC Container (PKG Installer)](#proxmox-lxc-container-pkg-installer)
   - [Docker / Docker Compose](#docker--docker-compose)
@@ -34,19 +35,39 @@ This guide covers installing the InvenTree MCP plugin across all supported deplo
 
 ---
 
+## Quick Install (LXC / Bare-Metal)
+
+For Proxmox LXC containers and bare-metal installs, SSH into your InvenTree server and run:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/syntaxerr66/inventree-mcp-plugin/master/install-mcp-plugin.sh)
+```
+
+This auto-detects your InvenTree installation, installs the plugin, enables plugins in the config, adds it to `plugins.txt` for persistence, and restarts InvenTree.
+
+After running the script, follow [Post-Install Configuration](#post-install-configuration) to activate the plugin in the web UI.
+
+For Docker installs, see [Docker / Docker Compose](#docker--docker-compose) below.
+
+---
+
 ## Installation by Deployment Type
 
 ### Proxmox LXC Container (PKG Installer)
 
 This is the most common setup when InvenTree is deployed via the [community Proxmox helper scripts](https://github.com/community-scripts/ProxmoxVE). The PKG installer puts InvenTree at `/opt/inventree` with a Python venv at `/opt/inventree/env`.
 
-#### Automated (new installs)
+#### Automated
 
-If you're deploying a fresh InvenTree LXC, a modified install script is included in `install/inventree-install.sh` that installs the MCP plugin automatically during container creation. It replaces the community `install/inventree-install.sh` in the Proxmox helper scripts framework.
+SSH into the LXC container and run the install script:
 
-After the container is created, complete InvenTree's initial setup via the web UI, then follow [Post-Install Configuration](#post-install-configuration) to activate the plugin and enable URL integration.
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/syntaxerr66/inventree-mcp-plugin/master/install-mcp-plugin.sh)
+```
 
-#### Manual (existing installs)
+Then follow [Post-Install Configuration](#post-install-configuration).
+
+#### Manual
 
 1. **SSH into the LXC container:**
 
@@ -57,17 +78,12 @@ After the container is created, complete InvenTree's initial setup via the web U
 2. **Install the plugin into InvenTree's venv:**
 
    ```bash
-   # If git is installed:
-   /opt/inventree/env/bin/pip install git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
-
-   # If git is NOT installed (use tarball instead):
    /opt/inventree/env/bin/pip install https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz
    ```
 
 3. **Add it to plugins.txt so it persists across InvenTree upgrades:**
 
    ```bash
-   # Use the tarball URL (works without git):
    echo "inventree-mcp-plugin @ https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz" >> /etc/inventree/plugins.txt
    ```
 
@@ -112,14 +128,14 @@ InvenTree's Docker setup uses a data volume (typically `inventree-data`) mounted
 
    ```bash
    # Replace /path/to/inventree-data with your actual data volume path
-   echo "inventree-mcp-plugin @ git+https://github.com/syntaxerr66/inventree-mcp-plugin.git" >> /path/to/inventree-data/plugins.txt
+   echo "inventree-mcp-plugin @ https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz" >> /path/to/inventree-data/plugins.txt
    ```
 
    If `plugins.txt` doesn't exist yet, create it:
 
    ```bash
    echo "# InvenTree Plugins" > /path/to/inventree-data/plugins.txt
-   echo "inventree-mcp-plugin @ git+https://github.com/syntaxerr66/inventree-mcp-plugin.git" >> /path/to/inventree-data/plugins.txt
+   echo "inventree-mcp-plugin @ https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz" >> /path/to/inventree-data/plugins.txt
    ```
 
 3. **Enable plugins in your `.env` file:**
@@ -158,11 +174,6 @@ InvenTree's Docker setup uses a data volume (typically `inventree-data`) mounted
 
 7. **Continue to [Post-Install Configuration](#post-install-configuration).**
 
-> **Note:** In Docker deployments, `git` must be available inside the container for pip to clone the repo. The official InvenTree Docker image includes `git`. If you're using a custom image that doesn't have it, install the plugin from a release tarball instead:
-> ```
-> inventree-mcp-plugin @ https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz
-> ```
-
 ---
 
 ### Bare-Metal / Source Install
@@ -171,6 +182,18 @@ For InvenTree installed from source (the "production server" setup), the typical
 - Source code: `/home/inventree/src/`
 - Virtual environment: `/home/inventree/env/`
 - Config: `/home/inventree/src/InvenTree/config.yaml`
+
+#### Automated
+
+SSH into the server and run the install script:
+
+```bash
+bash <(curl -fsSL https://raw.githubusercontent.com/syntaxerr66/inventree-mcp-plugin/master/install-mcp-plugin.sh)
+```
+
+Then follow [Post-Install Configuration](#post-install-configuration).
+
+#### Manual
 
 1. **Activate InvenTree's virtualenv:**
 
@@ -181,14 +204,14 @@ For InvenTree installed from source (the "production server" setup), the typical
 2. **Install the plugin:**
 
    ```bash
-   pip install git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
+   pip install https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz
    ```
 
 3. **Add to plugins.txt** (so `invoke update` preserves it):
 
    ```bash
    # plugins.txt is in the same directory as config.yaml
-   echo "inventree-mcp-plugin @ git+https://github.com/syntaxerr66/inventree-mcp-plugin.git" >> /home/inventree/src/InvenTree/plugins.txt
+   echo "inventree-mcp-plugin @ https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz" >> /home/inventree/src/InvenTree/plugins.txt
    ```
 
 4. **Enable plugins in `config.yaml`:**
@@ -319,14 +342,13 @@ http://<inventree-host>/plugin/inventree-mcp/mcp
 
 ### Claude Code (CLI)
 
-Add the server to your Claude Code MCP configuration. Edit `~/.claude/claude_code_config.json`:
+Add the server to your Claude Code MCP configuration. Edit `~/.claude/mcp.json`:
 
 ```json
 {
   "mcpServers": {
     "inventree": {
-      "type": "streamableHttp",
-      "url": "http://<inventree-host>/plugin/inventree-mcp/mcp",
+      "httpUrl": "http://<inventree-host>/plugin/inventree-mcp/mcp",
       "headers": {
         "Authorization": "Token inv-your-token-here"
       }
@@ -390,16 +412,19 @@ The `search_part_images` tool uses Google Custom Search to find images for parts
 
 ## Upgrading
 
-### Proxmox LXC / Bare-Metal
+### LXC / Bare-Metal
+
+Re-run the install script — it handles everything:
 
 ```bash
-# Activate the venv (adjust path for your deployment)
-/opt/inventree/env/bin/pip install --upgrade git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
+bash <(curl -fsSL https://raw.githubusercontent.com/syntaxerr66/inventree-mcp-plugin/master/install-mcp-plugin.sh)
+```
 
-# Restart InvenTree
-inventree restart          # PKG installer
-# or
-sudo supervisorctl restart all  # bare-metal
+Or manually:
+
+```bash
+/opt/inventree/env/bin/pip install --upgrade https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz
+inventree restart
 ```
 
 ### Docker
@@ -408,12 +433,6 @@ The plugin is reinstalled from `plugins.txt` on each container start (if "Check 
 
 ```bash
 docker compose restart
-```
-
-Or to install a specific version, pin it in `plugins.txt`:
-
-```
-inventree-mcp-plugin @ git+https://github.com/syntaxerr66/inventree-mcp-plugin.git@v0.2.0
 ```
 
 ---
@@ -426,7 +445,7 @@ In the InvenTree web UI: **Settings** > **Plugin Settings** > toggle off **Inven
 
 ### 2. Remove the package
 
-**Proxmox LXC / Bare-Metal:**
+**LXC / Bare-Metal:**
 ```bash
 /opt/inventree/env/bin/pip uninstall inventree-mcp-plugin
 ```
@@ -477,7 +496,7 @@ InvenTree's middleware redirects unauthenticated requests to the login page. Thi
 If you see `SynchronousOnlyOperation` or "You cannot call this from an async context", you're running an older version of the plugin. Upgrade to the latest:
 
 ```bash
-pip install --upgrade git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
+bash <(curl -fsSL https://raw.githubusercontent.com/syntaxerr66/inventree-mcp-plugin/master/install-mcp-plugin.sh)
 ```
 
 ### Database locked errors (SQLite)

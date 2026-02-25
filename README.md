@@ -14,12 +14,13 @@ Unlike a standalone MCP server that communicates with InvenTree via REST API, th
 
 ## Quick Start
 
+SSH into your InvenTree server and run:
+
 ```bash
-# Install into InvenTree's Python environment
-pip install git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
+bash <(curl -fsSL https://raw.githubusercontent.com/syntaxerr66/inventree-mcp-plugin/master/install-mcp-plugin.sh)
 ```
 
-Then restart InvenTree, enable the plugin in Settings > Plugin Settings, and enable "URL integration".
+Then activate the plugin in Settings > Plugin Settings, enable "URL integration", and restart.
 
 The MCP endpoint will be available at:
 
