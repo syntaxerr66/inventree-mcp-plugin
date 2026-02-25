@@ -17,7 +17,7 @@ Unlike a standalone MCP server that communicates with InvenTree via REST API, th
 Install into InvenTree's Python environment:
 
 ```bash
-pip install git+https://github.com/chrisbotelho/inventree-mcp-plugin.git
+pip install git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
 ```
 
 Then restart InvenTree and enable the plugin in the admin UI.
@@ -111,7 +111,7 @@ curl -X POST http://your-inventree/plugin/inventree-mcp/mcp \
 ## Development
 
 ```bash
-git clone https://github.com/chrisbotelho/inventree-mcp-plugin.git
+git clone https://github.com/syntaxerr66/inventree-mcp-plugin.git
 cd inventree-mcp-plugin
 pip install -e .
 ```
