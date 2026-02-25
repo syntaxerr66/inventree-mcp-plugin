@@ -42,7 +42,9 @@ This is the most common setup when InvenTree is deployed via the [community Prox
 
 #### Automated (new installs)
 
-If you're deploying a fresh InvenTree LXC, a modified install script is included in `install/inventree-install.sh` that installs and activates the MCP plugin automatically.
+If you're deploying a fresh InvenTree LXC, a modified install script is included in `install/inventree-install.sh` that installs the MCP plugin automatically during container creation. It replaces the community `install/inventree-install.sh` in the Proxmox helper scripts framework.
+
+After the container is created, complete InvenTree's initial setup via the web UI, then follow [Post-Install Configuration](#post-install-configuration) to activate the plugin and enable URL integration.
 
 #### Manual (existing installs)
 
@@ -55,13 +57,18 @@ If you're deploying a fresh InvenTree LXC, a modified install script is included
 2. **Install the plugin into InvenTree's venv:**
 
    ```bash
+   # If git is installed:
    /opt/inventree/env/bin/pip install git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
+
+   # If git is NOT installed (use tarball instead):
+   /opt/inventree/env/bin/pip install https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz
    ```
 
 3. **Add it to plugins.txt so it persists across InvenTree upgrades:**
 
    ```bash
-   echo "inventree-mcp-plugin @ git+https://github.com/syntaxerr66/inventree-mcp-plugin.git" >> /etc/inventree/plugins.txt
+   # Use the tarball URL (works without git):
+   echo "inventree-mcp-plugin @ https://github.com/syntaxerr66/inventree-mcp-plugin/archive/refs/heads/master.tar.gz" >> /etc/inventree/plugins.txt
    ```
 
 4. **Enable plugins in config.yaml** (if not already):
