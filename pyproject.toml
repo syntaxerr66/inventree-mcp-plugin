@@ -1,0 +1,21 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "inventree-mcp-plugin"
+version = "0.1.0"
+description = "MCP server plugin for InvenTree — exposes inventory tools via Streamable HTTP"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.9"
+dependencies = [
+    "django-mcp-server>=0.4.0",
+    "requests",
+]
+
+[project.entry-points."inventree_plugins"]
+InvenTreeMCPPlugin = "inventree_mcp_plugin.plugin:InvenTreeMCPPlugin"
+
+[tool.setuptools.packages.find]
+include = ["inventree_mcp_plugin*"]
