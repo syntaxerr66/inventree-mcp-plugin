@@ -12,56 +12,34 @@ Unlike a standalone MCP server that communicates with InvenTree via REST API, th
 - **DRF authentication** — Token and Session auth supported
 - **Optional image search** — Google Custom Search integration for part images
 
-## Installation
-
-Install into InvenTree's Python environment:
+## Quick Start
 
 ```bash
+# Install into InvenTree's Python environment
 pip install git+https://github.com/syntaxerr66/inventree-mcp-plugin.git
 ```
 
-Then restart InvenTree and enable the plugin in the admin UI.
+Then restart InvenTree, enable the plugin in Settings > Plugin Settings, and enable "URL integration".
 
-## Configuration
-
-After enabling the plugin, the MCP endpoint is available at:
+The MCP endpoint will be available at:
 
 ```
 http://<inventree-host>/plugin/inventree-mcp/mcp
 ```
 
-### Optional: Image Search
-
-To enable the `search_part_images` tool, set these in the plugin settings (InvenTree admin UI):
-
-- **Google API Key** — Google Cloud API key with Custom Search API enabled
-- **Google CSE ID** — Google Custom Search Engine ID configured for image search
+**See [INSTALL.md](INSTALL.md) for detailed instructions** covering Proxmox LXC, Docker, bare-metal installs, MCP client configuration, and troubleshooting.
 
 ## Usage
 
-### Authentication
-
-All requests require authentication via one of:
-
-- **Token**: `Authorization: Token <your-inventree-api-token>`
-- **Session**: Django session cookie (for browser-based clients)
-
-### Example: List Tools
+All requests require an InvenTree API token: `Authorization: Token inv-...`
 
 ```bash
+# Search for parts
 curl -X POST http://your-inventree/plugin/inventree-mcp/mcp \
   -H "Authorization: Token inv-..." \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":1,"method":"tools/list"}'
-```
-
-### Example: Search Parts
-
-```bash
-curl -X POST http://your-inventree/plugin/inventree-mcp/mcp \
-  -H "Authorization: Token inv-..." \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"search_parts","arguments":{"search":"ESP32"}}}'
+  -H "Accept: application/json, text/event-stream" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"search_parts","arguments":{"search":"ESP32"}}}'
 ```
 
 ## Tools
