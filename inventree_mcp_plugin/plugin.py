@@ -12,7 +12,7 @@ class InvenTreeMCPPlugin(UrlsMixin, SettingsMixin, InvenTreePlugin):
     TITLE = "InvenTree MCP Server"
     DESCRIPTION = "Exposes InvenTree inventory operations as MCP tools"
     VERSION = "0.1.0"
-    AUTHOR = "Chris Botelho"
+    AUTHOR = "syntaxerr66"
 
     SETTINGS = {
         "GOOGLE_API_KEY": {
