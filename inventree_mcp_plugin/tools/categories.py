@@ -67,11 +67,13 @@ async def create_part_category(
     parent: int = 0,
     default_location: int = 0,
     structural: Optional[bool] = None,
+    icon: str = "",
 ) -> str:
     """Create a new part category.
 
     Always search for existing categories first to avoid duplicates.
     Categories can be deeply nested; set parent to the parent category ID.
+    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
     """
 
     @sync_to_async
@@ -87,6 +89,8 @@ async def create_part_category(
             fields["default_location_id"] = default_location
         if structural is not None:
             fields["structural"] = structural
+        if icon:
+            fields["icon"] = icon
         category = PartCategory.objects.create(**fields)
         return serialize_part_category(category)
 
@@ -100,8 +104,13 @@ async def update_part_category(
     description: str = "",
     parent: int = 0,
     default_location: int = 0,
+    icon: str = "",
 ) -> str:
-    """Update an existing part category. Only provided fields are changed."""
+    """Update an existing part category. Only provided fields are changed.
+
+    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
+    Set icon to 'none' to clear an existing icon.
+    """
 
     @sync_to_async
     def _update():
@@ -123,6 +132,9 @@ async def update_part_category(
             updated = True
         if default_location:
             category.default_location_id = default_location
+            updated = True
+        if icon:
+            category.icon = "" if icon.lower() == "none" else icon
             updated = True
         if not updated:
             return {"error": "No fields provided to update"}

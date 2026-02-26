@@ -81,11 +81,13 @@ async def create_stock_location(
     description: str = "",
     parent: int = 0,
     structural: Optional[bool] = None,
+    icon: str = "",
 ) -> str:
     """Create a new stock location.
 
     Search first to avoid duplicates. Set parent to nest under an existing location.
     Set structural=true if the location is organizational only (can't store stock directly).
+    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
     """
 
     @sync_to_async
@@ -99,6 +101,8 @@ async def create_stock_location(
             fields["parent_id"] = parent
         if structural is not None:
             fields["structural"] = structural
+        if icon:
+            fields["icon"] = icon
         location = StockLocation.objects.create(**fields)
         return serialize_stock_location(location)
 
@@ -111,8 +115,13 @@ async def update_stock_location(
     name: str = "",
     description: str = "",
     parent: int = 0,
+    icon: str = "",
 ) -> str:
-    """Update an existing stock location. Only provided fields are changed."""
+    """Update an existing stock location. Only provided fields are changed.
+
+    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
+    Set icon to 'none' to clear an existing icon.
+    """
 
     @sync_to_async
     def _update():
@@ -131,6 +140,9 @@ async def update_stock_location(
             updated = True
         if parent:
             location.parent_id = parent
+            updated = True
+        if icon:
+            location.icon = "" if icon.lower() == "none" else icon
             updated = True
         if not updated:
             return {"error": "No fields provided to update"}
