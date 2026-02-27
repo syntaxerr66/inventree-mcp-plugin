@@ -10,6 +10,7 @@ Unlike a standalone MCP server that communicates with InvenTree via REST API, th
 - **Direct ORM access** — queries go straight to the database
 - **Streamable HTTP transport** — network-accessible MCP endpoint
 - **DRF authentication** — Token and Session auth supported
+- **Icon validation** — validates Tabler icons against InvenTree's bundled icon set
 - **Optional image search** — Google Custom Search integration for part images
 
 ## Quick Start
@@ -74,8 +75,8 @@ curl -X POST http://your-inventree/plugin/inventree-mcp/mcp \
 | `search_stock_locations` | Search locations by name |
 | `get_stock_location` | Get location by ID |
 | `list_stock_locations` | List locations with hierarchy |
-| `create_stock_location` | Create a new location |
-| `update_stock_location` | Update location fields |
+| `create_stock_location` | Create a new location (supports icon) |
+| `update_stock_location` | Update location fields (supports icon) |
 | `delete_stock_location` | Delete an empty location |
 
 ### Categories (5 tools)
@@ -83,9 +84,13 @@ curl -X POST http://your-inventree/plugin/inventree-mcp/mcp \
 |------|-------------|
 | `search_part_categories` | Search categories by name |
 | `list_part_categories` | List categories with hierarchy |
-| `create_part_category` | Create a new category |
-| `update_part_category` | Update category fields |
+| `create_part_category` | Create a new category (supports icon) |
+| `update_part_category` | Update category fields (supports icon) |
 | `delete_part_category` | Delete an empty category |
+
+## Icons
+
+Category and location tools support setting Tabler icons via the `icon` parameter using the format `ti:<name>:<variant>` (e.g. `ti:tool:outline`, `ti:circle:filled`). Icons are validated against InvenTree's bundled `icons.json` — invalid names or variants are rejected with a helpful error message. Pass `icon: "none"` to clear an existing icon.
 
 ## Development
 
