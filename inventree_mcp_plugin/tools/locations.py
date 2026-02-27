@@ -7,6 +7,7 @@ from typing import Optional
 from asgiref.sync import sync_to_async
 
 from ..mcp_server import mcp
+from .icons import validate_icon
 from .serializers import serialize_stock_location, to_json
 
 logger = logging.getLogger("inventree_mcp_plugin.tools.locations")
@@ -87,8 +88,12 @@ async def create_stock_location(
 
     Search first to avoid duplicates. Set parent to nest under an existing location.
     Set structural=true if the location is organizational only (can't store stock directly).
-    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
+    Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     """
+    if icon:
+        valid, err = validate_icon(icon)
+        if not valid:
+            return to_json({"error": err})
 
     @sync_to_async
     def _create():
@@ -119,9 +124,13 @@ async def update_stock_location(
 ) -> str:
     """Update an existing stock location. Only provided fields are changed.
 
-    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
+    Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     Set icon to 'none' to clear an existing icon.
     """
+    if icon and icon.lower() != "none":
+        valid, err = validate_icon(icon)
+        if not valid:
+            return to_json({"error": err})
 
     @sync_to_async
     def _update():

@@ -7,6 +7,7 @@ from typing import Optional
 from asgiref.sync import sync_to_async
 
 from ..mcp_server import mcp
+from .icons import validate_icon
 from .serializers import serialize_part_category, to_json
 
 logger = logging.getLogger("inventree_mcp_plugin.tools.categories")
@@ -73,8 +74,12 @@ async def create_part_category(
 
     Always search for existing categories first to avoid duplicates.
     Categories can be deeply nested; set parent to the parent category ID.
-    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
+    Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     """
+    if icon:
+        valid, err = validate_icon(icon)
+        if not valid:
+            return to_json({"error": err})
 
     @sync_to_async
     def _create():
@@ -108,9 +113,13 @@ async def update_part_category(
 ) -> str:
     """Update an existing part category. Only provided fields are changed.
 
-    Icon should be a Tabler icon string like 'ti:nail:outline' or 'ti:circle:outline'.
+    Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     Set icon to 'none' to clear an existing icon.
     """
+    if icon and icon.lower() != "none":
+        valid, err = validate_icon(icon)
+        if not valid:
+            return to_json({"error": err})
 
     @sync_to_async
     def _update():
