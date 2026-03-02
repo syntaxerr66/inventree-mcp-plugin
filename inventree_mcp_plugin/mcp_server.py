@@ -6,4 +6,4 @@ The views module imports tools/ to trigger registration at startup.
 
 from mcp_server.djangomcp import DjangoMCP
 
-mcp = DjangoMCP(name="inventree-mcp")
+mcp = DjangoMCP(name="inventree-mcp", stateless=True)
