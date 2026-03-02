@@ -348,7 +348,7 @@ Add the server to your Claude Code MCP configuration. Edit `~/.claude/mcp.json`:
 {
   "mcpServers": {
     "inventree": {
-      "httpUrl": "http://<inventree-host>/plugin/inventree-mcp/mcp",
+      "url": "http://<inventree-host>/plugin/inventree-mcp/mcp",
       "headers": {
         "Authorization": "Token inv-your-token-here"
       }
