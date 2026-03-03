@@ -92,6 +92,13 @@ def serialize_stock_location(location):
         "icon": getattr(location, "icon", "") or "",
     }
 
+    # Location type (nullable FK)
+    loc_type = getattr(location, "location_type", None)
+    if loc_type:
+        data["location_type"] = {"pk": loc_type.pk, "name": loc_type.name}
+    else:
+        data["location_type"] = None
+
     # Count items and sublocations
     try:
         data["items"] = location.stock_items.count() if hasattr(location, "stock_items") else 0
@@ -132,6 +139,66 @@ def serialize_part_category(category):
     except Exception:
         data["subcategories"] = 0
 
+    return data
+
+
+def serialize_parameter_template(tmpl):
+    """Serialize a PartParameterTemplate (part.models) to a dict."""
+    return {
+        "pk": tmpl.pk,
+        "name": tmpl.name,
+        "units": tmpl.units or "",
+        "description": getattr(tmpl, "description", "") or "",
+        "choices": getattr(tmpl, "choices", "") or "",
+        "checkbox": getattr(tmpl, "checkbox", False),
+    }
+
+
+def serialize_part_parameter(param):
+    """Serialize a PartParameter (part.models) to a dict."""
+    data = {
+        "pk": param.pk,
+        "template": {
+            "pk": param.template.pk,
+            "name": param.template.name,
+            "units": param.template.units or "",
+        },
+        "data": param.data or "",
+        "data_numeric": float(param.data_numeric) if param.data_numeric is not None else None,
+    }
+    if hasattr(param, "note"):
+        data["note"] = param.note or ""
+    if hasattr(param, "updated") and param.updated:
+        data["updated"] = param.updated.isoformat()
+    return data
+
+
+def serialize_category_parameter(cat_param):
+    """Serialize a PartCategoryParameterTemplate to a dict."""
+    return {
+        "pk": cat_param.pk,
+        "category": cat_param.category_id,
+        "template": {
+            "pk": cat_param.parameter_template.pk,
+            "name": cat_param.parameter_template.name,
+            "units": cat_param.parameter_template.units or "",
+        },
+        "default_value": cat_param.default_value or "",
+    }
+
+
+def serialize_location_type(loc_type):
+    """Serialize a StockLocationType to a dict."""
+    data = {
+        "pk": loc_type.pk,
+        "name": loc_type.name,
+        "description": getattr(loc_type, "description", "") or "",
+        "icon": getattr(loc_type, "icon", "") or "",
+    }
+    try:
+        data["location_count"] = loc_type.stock_locations.count()
+    except Exception:
+        data["location_count"] = 0
     return data
 
 

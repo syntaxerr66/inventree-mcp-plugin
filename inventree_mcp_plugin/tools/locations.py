@@ -83,12 +83,14 @@ async def create_stock_location(
     parent: int = 0,
     structural: Optional[bool] = None,
     icon: str = "",
+    location_type: int = 0,
 ) -> str:
     """Create a new stock location.
 
     Search first to avoid duplicates. Set parent to nest under an existing location.
     Set structural=true if the location is organizational only (can't store stock directly).
     Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
+    Set location_type to a StockLocationType ID to classify this location (use list_location_types).
     """
     if icon:
         valid, err = validate_icon(icon)
@@ -108,6 +110,8 @@ async def create_stock_location(
             fields["structural"] = structural
         if icon:
             fields["icon"] = icon
+        if location_type:
+            fields["location_type_id"] = location_type
         location = StockLocation.objects.create(**fields)
         return serialize_stock_location(location)
 
@@ -121,11 +125,14 @@ async def update_stock_location(
     description: str = "",
     parent: int = 0,
     icon: str = "",
+    location_type: int = 0,
 ) -> str:
     """Update an existing stock location. Only provided fields are changed.
 
     Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     Set icon to 'none' to clear an existing icon.
+    Set location_type to a StockLocationType ID to classify this location.
+    Set location_type to -1 to clear the location type.
     """
     if icon and icon.lower() != "none":
         valid, err = validate_icon(icon)
@@ -152,6 +159,12 @@ async def update_stock_location(
             updated = True
         if icon:
             location.icon = "" if icon.lower() == "none" else icon
+            updated = True
+        if location_type == -1:
+            location.location_type = None
+            updated = True
+        elif location_type:
+            location.location_type_id = location_type
             updated = True
         if not updated:
             return {"error": "No fields provided to update"}

@@ -3,12 +3,17 @@
 MCPServerStreamableHttpView inherits from DRF's APIView, so InvenTree's
 default DRF permission/auth classes apply. We override them to use InvenTree's
 own token auth and only require IsAuthenticated (no model permissions needed).
+
+DRF's SessionAuthentication enforces CSRF checks internally (bypassing
+Django's csrf_exempt decorator), so we use a CSRF-exempt wrapper for
+session auth to allow external MCP clients to connect without CSRF tokens.
 """
 
 import logging
 
 from django.views.decorators.csrf import csrf_exempt
 from mcp_server.views import MCPServerStreamableHttpView
+from rest_framework.authentication import SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 
 from .context import set_current_user
@@ -18,6 +23,18 @@ from .mcp_server import mcp
 from . import tools  # noqa: F401
 
 logger = logging.getLogger("inventree_mcp_plugin")
+
+
+class CsrfExemptSessionAuthentication(SessionAuthentication):
+    """Session auth without DRF's internal CSRF enforcement.
+
+    DRF's SessionAuthentication.enforce_csrf() creates its own CsrfViewMiddleware
+    instance and runs CSRF checks even when the view is decorated with csrf_exempt.
+    This subclass skips that check, relying on token auth as the primary method.
+    """
+
+    def enforce_csrf(self, request):
+        return
 
 
 class MCPView(MCPServerStreamableHttpView):
@@ -32,22 +49,19 @@ class MCPView(MCPServerStreamableHttpView):
     @classmethod
     def as_view(cls, **initkwargs):
         # Lazily set authentication classes from InvenTree's own auth
-        from rest_framework.authentication import (
-            BasicAuthentication,
-            SessionAuthentication,
-        )
+        from rest_framework.authentication import BasicAuthentication
 
         try:
             from users.authentication import ApiTokenAuthentication
 
             cls.authentication_classes = [
                 ApiTokenAuthentication,
-                SessionAuthentication,
+                CsrfExemptSessionAuthentication,
                 BasicAuthentication,
             ]
         except ImportError:
             cls.authentication_classes = [
-                SessionAuthentication,
+                CsrfExemptSessionAuthentication,
                 BasicAuthentication,
             ]
 
