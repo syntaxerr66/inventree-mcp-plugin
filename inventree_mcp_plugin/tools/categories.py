@@ -19,6 +19,9 @@ async def search_part_categories(search: str, limit: int = 25) -> str:
 
     Use the pathstring field to understand the full category hierarchy.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -46,6 +49,9 @@ async def list_part_categories(parent: int = 0, limit: int = 100, offset: int = 
     hierarchy path (e.g. 'Electronic Components/Resistors/Through Hole').
     Supports pagination via limit/offset.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -76,6 +82,10 @@ async def create_part_category(
     Categories can be deeply nested; set parent to the parent category ID.
     Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'add'):
+        return perm_err
+
     if icon:
         valid, err = validate_icon(icon)
         if not valid:
@@ -116,6 +126,10 @@ async def update_part_category(
     Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     Set icon to 'none' to clear an existing icon.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'change'):
+        return perm_err
+
     if icon and icon.lower() != "none":
         valid, err = validate_icon(icon)
         if not valid:
@@ -157,6 +171,9 @@ async def update_part_category(
 @mcp.tool()
 async def delete_part_category(id: int) -> str:
     """Delete a part category. Must have no parts or sub-categories."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'delete'):
+        return perm_err
 
     @sync_to_async
     def _delete():

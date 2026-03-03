@@ -18,6 +18,9 @@ async def search_parts(search: str, limit: int = 25) -> str:
 
     Searches across part name, description, IPN, and keywords.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -46,6 +49,9 @@ async def search_parts(search: str, limit: int = 25) -> str:
 @mcp.tool()
 async def get_part(id: int) -> str:
     """Get detailed information about a specific part by its ID (pk)."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -84,6 +90,9 @@ async def create_part(
     Set category=0 or omit for uncategorized. image_url is a URL that InvenTree
     will download the image from server-side.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'add'):
+        return perm_err
 
     @sync_to_async
     def _create():
@@ -144,6 +153,9 @@ async def update_part(
 
     Set image_url to a URL and InvenTree will download the image server-side.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'change'):
+        return perm_err
 
     @sync_to_async
     def _update():
@@ -205,6 +217,9 @@ async def delete_part(id: int) -> str:
 
     The part must have no stock items before it can be deleted.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'delete'):
+        return perm_err
 
     @sync_to_async
     def _delete():
@@ -228,6 +243,9 @@ async def list_parts(category: int = 0, limit: int = 50, offset: int = 0) -> str
 
     Set category=0 or omit to list all parts. Supports pagination via limit/offset.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -249,6 +267,9 @@ async def set_part_image(id: int, image_url: str) -> str:
 
     Use search_part_images to find image URLs, then pass one here.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'change'):
+        return perm_err
 
     @sync_to_async
     def _set_image():
@@ -276,6 +297,9 @@ async def search_part_images(query: str, num: int = 5) -> str:
     Returns image URLs that can be passed to set_part_image or create_part(image_url=...).
     Tip: include manufacturer name or 'datasheet' in query for better results.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'view'):
+        return perm_err
 
     @sync_to_async
     def _search():

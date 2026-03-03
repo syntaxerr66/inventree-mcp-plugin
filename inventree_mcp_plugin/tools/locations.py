@@ -19,6 +19,9 @@ async def search_stock_locations(search: str, limit: int = 25) -> str:
 
     Example: search for 'green' to find 'Green 1', 'Green 2', etc.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -41,6 +44,9 @@ async def search_stock_locations(search: str, limit: int = 25) -> str:
 @mcp.tool()
 async def get_stock_location(id: int) -> str:
     """Get detailed information about a specific stock location by its ID (pk)."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -61,6 +67,9 @@ async def list_stock_locations(parent: int = 0, limit: int = 100, offset: int = 
     Set parent=0 or omit to list all locations. Use the pathstring field to understand
     the location hierarchy. Supports pagination via limit/offset.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -92,6 +101,10 @@ async def create_stock_location(
     Icon should be a Tabler icon string like 'ti:tool:outline' or 'ti:circle:outline'.
     Set location_type to a StockLocationType ID to classify this location (use list_location_types).
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'add'):
+        return perm_err
+
     if icon:
         valid, err = validate_icon(icon)
         if not valid:
@@ -134,6 +147,10 @@ async def update_stock_location(
     Set location_type to a StockLocationType ID to classify this location.
     Set location_type to -1 to clear the location type.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'change'):
+        return perm_err
+
     if icon and icon.lower() != "none":
         valid, err = validate_icon(icon)
         if not valid:
@@ -178,6 +195,9 @@ async def update_stock_location(
 @mcp.tool()
 async def delete_stock_location(id: int) -> str:
     """Delete a stock location. The location must be empty (no items or sub-locations)."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'delete'):
+        return perm_err
 
     @sync_to_async
     def _delete():

@@ -29,6 +29,9 @@ async def list_parameter_templates(search: str = "", limit: int = 50) -> str:
     These templates define what parameters exist (e.g. 'Thread Size', 'Material').
     Set search="" to list all templates.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -66,6 +69,9 @@ async def create_parameter_template(
     - choices: comma-separated valid values (e.g. 'Red,Green,Blue')
     - checkbox: if true, the parameter is a boolean toggle
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'add'):
+        return perm_err
 
     @sync_to_async
     def _create():
@@ -89,6 +95,9 @@ async def create_parameter_template(
 @mcp.tool()
 async def delete_parameter_template(id: int) -> str:
     """Delete a parameter template. Fails if any parts still use it."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'delete'):
+        return perm_err
 
     @sync_to_async
     def _delete():
@@ -115,6 +124,9 @@ async def get_part_parameters(part: int) -> str:
 
     Returns template info (name, units) alongside each value.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -144,6 +156,9 @@ async def set_part_parameter(part: int, template: int, value: str) -> str:
     - template: ParameterTemplate ID (use list_parameter_templates to find it)
     - value: the parameter value as a string
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'change'):
+        return perm_err
 
     @sync_to_async
     def _upsert():
@@ -190,6 +205,9 @@ async def bulk_set_part_parameters(
 
     Returns a summary with counts and any errors per entry.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'change'):
+        return perm_err
 
     @sync_to_async
     def _bulk_upsert():
@@ -289,6 +307,9 @@ async def delete_part_parameter(part: int, template: int) -> str:
     - part: Part ID
     - template: ParameterTemplate ID
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part', 'change'):
+        return perm_err
 
     @sync_to_async
     def _delete():
@@ -325,6 +346,9 @@ async def get_category_parameters(category: int) -> str:
     These are parameter slots that get pre-populated when creating parts
     in this category.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -359,6 +383,9 @@ async def set_category_parameter(
     - template: ParameterTemplate ID
     - default_value: default value for the parameter (can be empty)
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'change'):
+        return perm_err
 
     @sync_to_async
     def _upsert():
@@ -396,6 +423,9 @@ async def delete_category_parameter(category: int, template: int) -> str:
     - category: PartCategory ID
     - template: ParameterTemplate ID
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('part_category', 'change'):
+        return perm_err
 
     @sync_to_async
     def _delete():
@@ -435,6 +465,9 @@ async def list_location_types(search: str = "", limit: int = 50) -> str:
 
     Location types classify stock locations. Set search="" to list all.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -465,6 +498,10 @@ async def create_location_type(
     locations via create_stock_location or update_stock_location.
     Icon should be a Tabler icon string like 'ti:box:outline'.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'add'):
+        return perm_err
+
     if icon:
         valid, err = validate_icon(icon)
         if not valid:
@@ -488,6 +525,9 @@ async def create_location_type(
 @mcp.tool()
 async def delete_location_type(id: int) -> str:
     """Delete a stock location type."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock_location', 'delete'):
+        return perm_err
 
     @sync_to_async
     def _delete():

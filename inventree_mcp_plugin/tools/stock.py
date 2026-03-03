@@ -23,6 +23,9 @@ async def get_stock(
 
     Set part=0 and location=0 to list all stock. Supports pagination via limit/offset.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -43,6 +46,9 @@ async def get_stock(
 @mcp.tool()
 async def get_stock_item(id: int) -> str:
     """Get detailed information about a specific stock item by its ID (pk)."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock', 'view'):
+        return perm_err
 
     @sync_to_async
     def _query():
@@ -70,6 +76,9 @@ async def add_stock(
 
     For trackable parts, provide a serial number. Set location=0 to leave unassigned.
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock', 'add'):
+        return perm_err
 
     @sync_to_async
     def _create():
@@ -102,6 +111,9 @@ async def stock_add_quantity(items: list, notes: str = "") -> str:
     items: list of objects, each with 'pk' (stock item ID) and 'quantity' (amount to add).
     Example: [{"pk": 1, "quantity": 10}, {"pk": 2, "quantity": 5}]
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock', 'change'):
+        return perm_err
 
     @sync_to_async
     def _add():
@@ -137,6 +149,9 @@ async def stock_remove_quantity(items: list, notes: str = "") -> str:
     items: list of objects, each with 'pk' (stock item ID) and 'quantity' (amount to remove).
     Example: [{"pk": 1, "quantity": 5}]
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock', 'change'):
+        return perm_err
 
     @sync_to_async
     def _remove():
@@ -173,6 +188,9 @@ async def stock_transfer(items: list, location: int, notes: str = "") -> str:
     location: destination stock location ID.
     Example: stock_transfer(items=[{"pk": 1, "quantity": 5}], location=3)
     """
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock', 'change'):
+        return perm_err
 
     @sync_to_async
     def _transfer():
@@ -207,6 +225,9 @@ async def stock_transfer(items: list, location: int, notes: str = "") -> str:
 @mcp.tool()
 async def delete_stock_item(id: int) -> str:
     """Delete a stock item permanently."""
+    from ..permissions import check_permission
+    if perm_err := await check_permission('stock', 'delete'):
+        return perm_err
 
     @sync_to_async
     def _delete():
