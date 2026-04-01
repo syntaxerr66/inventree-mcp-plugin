@@ -7,16 +7,19 @@ from typing import Optional
 from asgiref.sync import sync_to_async
 
 from ..mcp_server import mcp
-from .serializers import serialize_part, to_json
+from .serializers import serialize_part, serialize_part_compact, to_json
 
 logger = logging.getLogger("inventree_mcp_plugin.tools.parts")
 
 
 @mcp.tool()
-async def search_parts(search: str, limit: int = 25) -> str:
-    """Search for parts by keyword. Returns matching parts with details.
+async def search_parts(search: str = "", category: int = 0, limit: int = 10, offset: int = 0) -> str:
+    """Search and list parts. Returns compact results; use get_part(id) for full detail.
 
-    Searches across part name, description, IPN, and keywords.
+    Combine filters: search by keyword AND/OR filter by category.
+    Set search="" and category=0 to list all parts.
+    Default limit is 10 — check the count field for total matches and
+    increase limit or paginate with offset if needed.
     """
     from ..permissions import check_permission
     if perm_err := await check_permission('part', 'view'):
@@ -24,26 +27,25 @@ async def search_parts(search: str, limit: int = 25) -> str:
 
     @sync_to_async
     def _query():
-        from django.db.models import Q
-
         from part.models import Part
 
-        if limit <= 0:
-            lim = 25
-        else:
-            lim = limit
-        parts = list(
-            Part.objects.filter(
+        qs = Part.objects.all()
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
                 Q(name__icontains=search)
                 | Q(description__icontains=search)
                 | Q(IPN__icontains=search)
                 | Q(keywords__icontains=search)
-            )[:lim]
-        )
-        return [serialize_part(p) for p in parts]
+            )
+        if category:
+            qs = qs.filter(category_id=category)
+        lim = limit if limit > 0 else 10
+        total = qs.count()
+        parts = list(qs[offset : offset + lim])
+        return {"count": total, "results": [serialize_part_compact(p) for p in parts]}
 
-    results = await _query()
-    return to_json({"count": len(results), "results": results})
+    return to_json(await _query())
 
 
 @mcp.tool()
@@ -84,7 +86,7 @@ async def create_part(
     """Create a new part.
 
     Always use this workflow: search_parts first to check for duplicates,
-    then list_part_categories (check pathstring fields for nesting) to find
+    then search_part_categories (check pathstring fields for nesting) to find
     the deepest matching category, then create the part with the correct category ID.
 
     Set category=0 or omit for uncategorized. image_url is a URL that InvenTree
@@ -235,30 +237,6 @@ async def delete_part(id: int) -> str:
         return f"Part {id} deleted successfully."
 
     return await _delete()
-
-
-@mcp.tool()
-async def list_parts(category: int = 0, limit: int = 50, offset: int = 0) -> str:
-    """List parts, optionally filtered by category.
-
-    Set category=0 or omit to list all parts. Supports pagination via limit/offset.
-    """
-    from ..permissions import check_permission
-    if perm_err := await check_permission('part', 'view'):
-        return perm_err
-
-    @sync_to_async
-    def _query():
-        from part.models import Part
-
-        qs = Part.objects.all()
-        if category:
-            qs = qs.filter(category_id=category)
-        total = qs.count()
-        parts = list(qs[offset : offset + limit])
-        return {"count": total, "results": [serialize_part(p) for p in parts]}
-
-    return to_json(await _query())
 
 
 @mcp.tool()

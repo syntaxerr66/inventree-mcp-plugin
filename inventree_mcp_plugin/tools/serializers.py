@@ -7,7 +7,7 @@ import json
 
 
 def serialize_part(part):
-    """Serialize a Part model instance to a dict."""
+    """Serialize a Part model instance to a dict (full detail)."""
     data = {
         "pk": part.pk,
         "name": part.name,
@@ -25,7 +25,7 @@ def serialize_part(part):
         "active": part.active,
     }
 
-    # Image fields
+    # Image field
     if part.image:
         try:
             data["image"] = part.image.url
@@ -34,13 +34,21 @@ def serialize_part(part):
     else:
         data["image"] = None
 
-    data["thumbnail"] = data["image"]  # Simplified; InvenTree generates thumbnails separately
-
     return data
 
 
+def serialize_part_compact(part):
+    """Compact part serialization for list/search results."""
+    return {
+        "pk": part.pk,
+        "name": part.name,
+        "description": part.description or "",
+        "category": part.category_id,
+    }
+
+
 def serialize_stock_item(item):
-    """Serialize a StockItem model instance to a dict."""
+    """Serialize a StockItem model instance to a dict (full detail)."""
     data = {
         "pk": item.pk,
         "part": item.part_id,
@@ -78,8 +86,19 @@ def serialize_stock_item(item):
     return data
 
 
+def serialize_stock_item_compact(item):
+    """Compact stock item serialization for list results."""
+    return {
+        "pk": item.pk,
+        "part": item.part_id,
+        "quantity": float(item.quantity),
+        "location": item.location_id,
+        "part_name": item.part.name if hasattr(item, "part") and item.part else "",
+    }
+
+
 def serialize_stock_location(location):
-    """Serialize a StockLocation model instance to a dict."""
+    """Serialize a StockLocation model instance to a dict (full detail)."""
     data = {
         "pk": location.pk,
         "name": location.name,
@@ -113,8 +132,30 @@ def serialize_stock_location(location):
     return data
 
 
+def serialize_stock_location_compact(location):
+    """Compact location serialization for list/search results."""
+    data = {
+        "pk": location.pk,
+        "name": location.name,
+        "pathstring": location.pathstring if hasattr(location, "pathstring") else location.name,
+        "parent": location.parent_id,
+    }
+    loc_type = getattr(location, "location_type", None)
+    if loc_type:
+        data["location_type"] = loc_type.name
+    try:
+        data["items"] = location.stock_items.count() if hasattr(location, "stock_items") else 0
+    except Exception:
+        data["items"] = 0
+    try:
+        data["sublocations"] = location.children.count() if hasattr(location, "children") else 0
+    except Exception:
+        data["sublocations"] = 0
+    return data
+
+
 def serialize_part_category(category):
-    """Serialize a PartCategory model instance to a dict."""
+    """Serialize a PartCategory model instance to a dict (full detail)."""
     data = {
         "pk": category.pk,
         "name": category.name,
@@ -139,6 +180,25 @@ def serialize_part_category(category):
     except Exception:
         data["subcategories"] = 0
 
+    return data
+
+
+def serialize_part_category_compact(category):
+    """Compact category serialization for list/search results."""
+    data = {
+        "pk": category.pk,
+        "name": category.name,
+        "pathstring": category.pathstring if hasattr(category, "pathstring") else category.name,
+        "parent": category.parent_id,
+    }
+    try:
+        data["part_count"] = category.parts.count() if hasattr(category, "parts") else 0
+    except Exception:
+        data["part_count"] = 0
+    try:
+        data["subcategories"] = category.children.count() if hasattr(category, "children") else 0
+    except Exception:
+        data["subcategories"] = 0
     return data
 
 
@@ -202,6 +262,6 @@ def serialize_location_type(loc_type):
     return data
 
 
-def to_json(data, indent=2):
-    """Serialize data to indented JSON string."""
-    return json.dumps(data, indent=indent, default=str)
+def to_json(data):
+    """Serialize data to compact JSON string."""
+    return json.dumps(data, separators=(",", ":"), default=str)

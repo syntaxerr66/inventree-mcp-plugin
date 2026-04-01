@@ -8,16 +8,19 @@ from asgiref.sync import sync_to_async
 
 from ..mcp_server import mcp
 from .icons import validate_icon
-from .serializers import serialize_stock_location, to_json
+from .serializers import serialize_stock_location, serialize_stock_location_compact, to_json
 
 logger = logging.getLogger("inventree_mcp_plugin.tools.locations")
 
 
 @mcp.tool()
-async def search_stock_locations(search: str, limit: int = 25) -> str:
-    """Search for stock locations by name. Supports partial/fuzzy matching.
+async def search_stock_locations(search: str = "", parent: int = 0, limit: int = 10, offset: int = 0) -> str:
+    """Search and list stock locations. Returns compact results; use get_stock_location(id) for full detail.
 
-    Example: search for 'green' to find 'Green 1', 'Green 2', etc.
+    Combine filters: search by name AND/OR filter by parent location.
+    Set search="" and parent=0 to list all locations.
+    Default limit is 10 — check the count field for total matches and
+    increase limit or paginate with offset if needed.
     """
     from ..permissions import check_permission
     if perm_err := await check_permission('stock_location', 'view'):
@@ -25,20 +28,22 @@ async def search_stock_locations(search: str, limit: int = 25) -> str:
 
     @sync_to_async
     def _query():
-        from django.db.models import Q
-
         from stock.models import StockLocation
 
-        lim = limit if limit > 0 else 25
-        locations = list(
-            StockLocation.objects.filter(
+        qs = StockLocation.objects.all()
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
                 Q(name__icontains=search) | Q(description__icontains=search)
-            )[:lim]
-        )
-        return [serialize_stock_location(loc) for loc in locations]
+            )
+        if parent:
+            qs = qs.filter(parent_id=parent)
+        lim = limit if limit > 0 else 10
+        total = qs.count()
+        locations = list(qs[offset : offset + lim])
+        return {"count": total, "results": [serialize_stock_location_compact(loc) for loc in locations]}
 
-    results = await _query()
-    return to_json({"count": len(results), "results": results})
+    return to_json(await _query())
 
 
 @mcp.tool()
@@ -56,31 +61,6 @@ async def get_stock_location(id: int) -> str:
             return serialize_stock_location(StockLocation.objects.get(pk=id))
         except StockLocation.DoesNotExist:
             return {"error": f"Stock location {id} not found"}
-
-    return to_json(await _query())
-
-
-@mcp.tool()
-async def list_stock_locations(parent: int = 0, limit: int = 100, offset: int = 0) -> str:
-    """List stock locations, optionally filtered by parent location.
-
-    Set parent=0 or omit to list all locations. Use the pathstring field to understand
-    the location hierarchy. Supports pagination via limit/offset.
-    """
-    from ..permissions import check_permission
-    if perm_err := await check_permission('stock_location', 'view'):
-        return perm_err
-
-    @sync_to_async
-    def _query():
-        from stock.models import StockLocation
-
-        qs = StockLocation.objects.all()
-        if parent:
-            qs = qs.filter(parent_id=parent)
-        total = qs.count()
-        locations = list(qs[offset : offset + limit])
-        return {"count": total, "results": [serialize_stock_location(l) for l in locations]}
 
     return to_json(await _query())
 

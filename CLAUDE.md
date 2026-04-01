@@ -35,13 +35,13 @@ Every tool follows the same structure:
 - **Lazy imports** of Django models inside the inner function (avoids import-time app registry issues)
 - Returns JSON strings via `serializers.to_json()`
 
-Tool modules: `parts.py` (8 tools), `stock.py` (7 tools), `locations.py` (6 tools, +location_type support), `categories.py` (5 tools), `parameters.py` (13 tools — templates, part params incl. bulk upsert, category params, location types).
+Tool modules: `parts.py` (7 tools), `stock.py` (7 tools), `locations.py` (5 tools, +location_type support), `categories.py` (4 tools), `parameters.py` (13 tools — templates, part params incl. bulk upsert, category params, location types).
 
 ### Key Conventions
 
 - `id=0` or `parent=0` means "not set" / "no filter" (not a real FK value)
 - `Optional[bool] = None` means "don't change this field" in create/update tools
-- Serializers in `serializers.py` produce dicts matching the original Go MCP server's output format for client compatibility
+- Serializers in `serializers.py` have full and compact variants. List/search tools use `*_compact` serializers (fewer fields) to reduce MCP response size; `get_*` tools use full serializers. `to_json()` produces compact JSON (no whitespace)
 - Icon validation (`icons.py`) loads InvenTree's bundled `icons.json` with `@lru_cache` and validates `ti:<name>:<variant>` format, with fuzzy suggestions on invalid names
 
 ### Dependencies

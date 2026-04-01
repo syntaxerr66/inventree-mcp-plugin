@@ -8,46 +8,19 @@ from asgiref.sync import sync_to_async
 
 from ..mcp_server import mcp
 from .icons import validate_icon
-from .serializers import serialize_part_category, to_json
+from .serializers import serialize_part_category, serialize_part_category_compact, to_json
 
 logger = logging.getLogger("inventree_mcp_plugin.tools.categories")
 
 
 @mcp.tool()
-async def search_part_categories(search: str, limit: int = 25) -> str:
-    """Search for part categories by name.
+async def search_part_categories(search: str = "", parent: int = 0, limit: int = 10, offset: int = 0) -> str:
+    """Search and list part categories. Returns compact results; use pathstring for hierarchy.
 
-    Use the pathstring field to understand the full category hierarchy.
-    """
-    from ..permissions import check_permission
-    if perm_err := await check_permission('part_category', 'view'):
-        return perm_err
-
-    @sync_to_async
-    def _query():
-        from django.db.models import Q
-
-        from part.models import PartCategory
-
-        lim = limit if limit > 0 else 25
-        categories = list(
-            PartCategory.objects.filter(
-                Q(name__icontains=search) | Q(description__icontains=search)
-            )[:lim]
-        )
-        return [serialize_part_category(cat) for cat in categories]
-
-    results = await _query()
-    return to_json({"count": len(results), "results": results})
-
-
-@mcp.tool()
-async def list_part_categories(parent: int = 0, limit: int = 100, offset: int = 0) -> str:
-    """List part categories, optionally filtered by parent.
-
-    Set parent=0 or omit to list all categories. The pathstring field shows the full
-    hierarchy path (e.g. 'Electronic Components/Resistors/Through Hole').
-    Supports pagination via limit/offset.
+    Combine filters: search by name AND/OR filter by parent category.
+    Set search="" and parent=0 to list all categories.
+    Default limit is 10 — check the count field for total matches and
+    increase limit or paginate with offset if needed.
     """
     from ..permissions import check_permission
     if perm_err := await check_permission('part_category', 'view'):
@@ -58,11 +31,17 @@ async def list_part_categories(parent: int = 0, limit: int = 100, offset: int = 
         from part.models import PartCategory
 
         qs = PartCategory.objects.all()
+        if search:
+            from django.db.models import Q
+            qs = qs.filter(
+                Q(name__icontains=search) | Q(description__icontains=search)
+            )
         if parent:
             qs = qs.filter(parent_id=parent)
+        lim = limit if limit > 0 else 10
         total = qs.count()
-        categories = list(qs[offset : offset + limit])
-        return {"count": total, "results": [serialize_part_category(c) for c in categories]}
+        categories = list(qs[offset : offset + lim])
+        return {"count": total, "results": [serialize_part_category_compact(c) for c in categories]}
 
     return to_json(await _query())
 

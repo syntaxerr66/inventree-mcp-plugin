@@ -288,14 +288,16 @@ async def bulk_set_part_parameters(
 
         created = sum(1 for r in results if r.get("action") == "created")
         updated = sum(1 for r in results if r.get("action") == "updated")
-        errors = sum(1 for r in results if "error" in r)
-        return {
+        error_details = [r for r in results if "error" in r]
+        summary = {
             "total": len(assignments),
             "created": created,
             "updated": updated,
-            "errors": errors,
-            "details": results,
+            "errors": len(error_details),
         }
+        if error_details:
+            summary["error_details"] = error_details
+        return summary
 
     return to_json(await _bulk_upsert())
 

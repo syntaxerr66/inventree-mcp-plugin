@@ -7,7 +7,7 @@ from typing import Optional
 from asgiref.sync import sync_to_async
 
 from ..mcp_server import mcp
-from .serializers import serialize_stock_item, to_json
+from .serializers import serialize_stock_item, serialize_stock_item_compact, to_json
 
 logger = logging.getLogger("inventree_mcp_plugin.tools.stock")
 
@@ -16,12 +16,15 @@ logger = logging.getLogger("inventree_mcp_plugin.tools.stock")
 async def get_stock(
     part: int = 0,
     location: int = 0,
-    limit: int = 50,
+    limit: int = 10,
     offset: int = 0,
 ) -> str:
     """List stock items, optionally filtered by part ID and/or location ID.
 
-    Set part=0 and location=0 to list all stock. Supports pagination via limit/offset.
+    Set part=0 and location=0 to list all stock. Returns compact results;
+    use get_stock_item(id) for full detail.
+    Default limit is 10 — check the count field for total matches and
+    increase limit or paginate with offset if needed.
     """
     from ..permissions import check_permission
     if perm_err := await check_permission('stock', 'view'):
@@ -36,9 +39,10 @@ async def get_stock(
             qs = qs.filter(part_id=part)
         if location:
             qs = qs.filter(location_id=location)
+        lim = limit if limit > 0 else 10
         total = qs.count()
-        items = list(qs.select_related("part")[offset : offset + limit])
-        return {"count": total, "results": [serialize_stock_item(i) for i in items]}
+        items = list(qs.select_related("part")[offset : offset + lim])
+        return {"count": total, "results": [serialize_stock_item_compact(i) for i in items]}
 
     return to_json(await _query())
 

@@ -11,7 +11,11 @@ InvenTree MCP Server — inventory management via direct ORM access.
 
 ## Important conventions
 - ID parameters of 0 mean "no filter" or "top-level" (not a real database ID).
-- Use list/search tools BEFORE creating new items to avoid duplicates.
+- Use search tools BEFORE creating new items to avoid duplicates.
+- Search/list tools return 10 results by default. The `count` field shows the \
+total number of matches. Increase `limit` or paginate with `offset` to see more.
+- Search/list tools return compact results. Use get_part, get_stock_location, \
+or get_stock_item for full detail on a specific item.
 
 ## Parameter templates
 Before creating a parameter template, call `list_parameter_templates` to check \
